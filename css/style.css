@@ -1,0 +1,117 @@
+body{
+    font-family:Arial;
+    background:#f4f6f9;
+    margin:0;
+}
+
+.container{
+    width:90%;
+    margin:auto;
+    text-align:center;
+}
+
+h1{
+    color:#004080;
+}
+
+table{
+    border-collapse:collapse;
+    width:80%;
+    margin:auto;
+    background:white;
+}
+
+th{
+    background:#004080;
+    color:white;
+}
+
+th,td{
+    border:1px solid #ccc;
+    padding:10px;
+    text-align:center;
+}
+
+canvas{
+    width:90% !important;
+    max-width:1200px;
+    margin:auto;
+}
+
+.navbar{
+    width:100%;
+    background:#003366;
+    padding:15px;
+    margin-bottom:20px;
+}
+
+.btn-home{
+    color:white;
+    text-decoration:none;
+    font-weight:bold;
+    padding:10px 15px;
+    border-radius:5px;
+    background:#0055aa;
+}
+
+.btn-home:hover{
+    background:#0077dd;
+}
+
+.gold{
+    background:#FFD700;
+    font-weight:bold;
+}
+
+.silver{
+    background:#C0C0C0;
+    font-weight:bold;
+}
+
+.last-place{
+    background:#ffe6e6;
+    color:#b30000;
+    font-weight:bold;
+    border-left:6px solid #b30000;
+}
+
+.last-place td:first-child{
+    font-size:1.2em;
+}
+
+.game-block{
+    margin-top:25px;
+    margin-bottom:25px;
+}
+
+.game-title{
+    background:#003366;
+    color:white;
+    padding:12px;
+    border-radius:8px 8px 0 0;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.game-result{
+    float:right;
+    color:#FFD700;
+}
+
+.game-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-bottom:20px;
+}
+
+.game-table th{
+    background:#e9eef5;
+    color:#003366;
+}
+
+.game-table td,
+.game-table th{
+    border:1px solid #ddd;
+    padding:10px;
+    text-align:center;
+}
