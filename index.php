@@ -122,8 +122,6 @@ $liderPuntos = $puntos[$liderID];
 
 <h2>Detalle de Pronósticos</h2>
 
-<!-- <table> -->
-
 <?php
 
 usort($detalle, function($a, $b){
@@ -216,8 +214,6 @@ if($partidoActual != '')
 
 
 ?>
-
-<!-- </table> -->
 
 </div>
 
