@@ -10,11 +10,17 @@ $participantes = leerCSV(__DIR__ . '/../data/participantes.csv');
 $puntos = [];
 $evolucion = [];
 $detalle = [];
+$estadisticas = [];
 
 foreach($participantes as $p)
 {
     $puntos[$p['id']] = 0;
     $evolucion[$p['id']] = [];
+
+    $estadisticas[$p['id']] = [
+        'exactos' => 0,
+        'ganador' => 0
+    ];
 }
 
 foreach($resultados as $resultado)
@@ -37,9 +43,23 @@ foreach($resultados as $resultado)
         $pred2 = intval($pron['goles2']);
 
         // Marcador exacto
+        // if($real1 == $pred1 && $real2 == $pred2)
+        // {
+        //     $puntosPartido = 5;
+        // }
+        // else
+        // {
+        //     $ganadorReal = ganador($real1,$real2);
+        //     $ganadorPred = ganador($pred1,$pred2);
+
+        //     if($ganadorReal == $ganadorPred)
+        //         $puntosPartido = 3;
+        // }
         if($real1 == $pred1 && $real2 == $pred2)
         {
             $puntosPartido = 5;
+
+            $estadisticas[$id]['exactos']++;
         }
         else
         {
@@ -47,7 +67,11 @@ foreach($resultados as $resultado)
             $ganadorPred = ganador($pred1,$pred2);
 
             if($ganadorReal == $ganadorPred)
+            {
                 $puntosPartido = 3;
+
+                $estadisticas[$id]['ganador']++;
+            }
         }
 
         $puntos[$id] += $puntosPartido;
@@ -70,5 +94,6 @@ return [
     'puntos'=>$puntos,
     'evolucion'=>$evolucion,
     'participantes'=>$participantes,
-    'detalle'=>$detalle
+    'detalle'=>$detalle,
+    'estadisticas' => $estadisticas
 ];

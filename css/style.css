@@ -115,3 +115,133 @@ canvas{
     padding:10px;
     text-align:center;
 }
+
+
+.ranking-container{
+    width:90%;
+    max-width:1000px;
+    margin:40px auto;
+}
+
+.ranking-title{
+    background:#003366;
+    color:white;
+    padding:15px;
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+    border-radius:10px 10px 0 0;
+}
+
+.ranking-table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+    box-shadow:0 2px 10px rgba(0,0,0,.15);
+}
+
+.ranking-table th{
+    background:#e9eef5;
+    color:#003366;
+    padding:12px;
+    text-align:center;
+    font-size:16px;
+}
+
+.ranking-table td{
+    padding:12px;
+    text-align:center;
+    border-bottom:1px solid #ddd;
+}
+
+.ranking-table tr:hover{
+    background:#f5f8fc;
+}
+
+.first-place{
+    background:#fff3b0 !important;
+    font-weight:bold;
+}
+
+.second-place{
+    background:#e6e6e6 !important;
+    font-weight:bold;
+}
+
+.third-place{
+    background:#f2d2b6 !important;
+    font-weight:bold;
+}
+
+.last-place{
+    background:#ffe6e6 !important;
+    color:#b30000;
+    font-weight:bold;
+}
+
+.position-badge{
+    font-size:18px;
+    font-weight:bold;
+}
+
+.game-block{
+    margin-bottom:15px;
+    border-radius:8px;
+    overflow:hidden;
+    box-shadow:0 2px 6px rgba(0,0,0,.1);
+}
+
+.game-title{
+    background:#003366;
+    color:white;
+    padding:12px 15px;
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-weight:bold;
+    user-select:none;
+}
+
+.game-title:hover{
+    background:#004c99;
+}
+
+.game-content{
+    display:none;
+    background:white;
+}
+
+.game-content.active{
+    display:block;
+}
+
+.game-result{
+    color:#FFD700;
+}
+
+.arrow{
+    transition:transform .3s;
+    margin-left:10px;
+}
+
+.arrow.rotate{
+    transform:rotate(90deg);
+}
+
+.game-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.game-table th{
+    background:#e9eef5;
+    color:#003366;
+}
+
+.game-table td,
+.game-table th{
+    border:1px solid #ddd;
+    padding:10px;
+    text-align:center;
+}

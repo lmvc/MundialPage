@@ -45,85 +45,9 @@ $ultimoLugar = $ranking[$totalRanking - 1] ?? null;
 
 <meta charset="UTF-8">
 
-<title>Quiniela Mundial 2026</title>
+<title>🏆Mundial2026</title>
 
 <link rel="stylesheet" href="css/style.css">
-
-<!-- <style>
-
-body{
-    font-family: Arial, sans-serif;
-    background:#f5f7fa;
-    margin:0;
-}
-
-.container{
-    width:95%;
-    max-width:1200px;
-    margin:auto;
-    padding:20px;
-}
-
-.header{
-    text-align:center;
-    margin-bottom:30px;
-}
-
-.card{
-    background:white;
-    border-radius:10px;
-    padding:20px;
-    margin-bottom:20px;
-    box-shadow:0 2px 8px rgba(0,0,0,.1);
-}
-
-table{
-    width:100%;
-    border-collapse:collapse;
-}
-
-th{
-    background:#003366;
-    color:white;
-}
-
-th,td{
-    padding:12px;
-    border:1px solid #ddd;
-    text-align:center;
-}
-
-tr:nth-child(even){
-    background:#f8f8f8;
-}
-
-.btn{
-    display:inline-block;
-    padding:10px 20px;
-    background:#003366;
-    color:white;
-    text-decoration:none;
-    border-radius:5px;
-    margin-top:10px;
-}
-
-.btn:hover{
-    background:#0055aa;
-}
-
-.gold{
-    background:#ffd700;
-}
-
-.silver{
-    background:#c0c0c0;
-}
-
-.bronze{
-    background:#cd7f32;
-}
-
-</style> -->
 
 </head>
 
@@ -132,7 +56,7 @@ tr:nth-child(even){
 <div class="container">
 
 <div class="header">
-    <h1>🏆 Quiniela Mundial 2026</h1>
+    <h1>🏆 Quiniela Mundial 2026 - CIO_AGS</h1>
 </div>
 
 <div class="card">
@@ -198,40 +122,102 @@ $liderPuntos = $puntos[$liderID];
 
 <h2>Detalle de Pronósticos</h2>
 
-<table>
-
-<tr>
-    <th>Participante</th>
-    <th>Juego</th>
-    <th>Pronóstico</th>
-    <th>Resultado</th>
-    <th>Puntos</th>
-</tr>
+<!-- <table> -->
 
 <?php
+
+usort($detalle, function($a, $b){
+
+    if($a['partido'] == $b['partido'])
+        return 0;
+
+    return ($a['partido'] < $b['partido']) ? -1 : 1;
+});
+
+
+$partidoActual = '';
 
 foreach($detalle as $fila)
 {
     $nombre = $nombres[$fila['participante']];
 
     $juego =
-        $fila['equipo1']
-        ." vs ".
+        $fila['equipo1'] .
+        " vs " .
         $fila['equipo2'];
+
+    if($partidoActual != $juego)
+    {
+        if($partidoActual != '')
+        {
+            echo "</tbody></table></div>";
+        }
+
+        $partidoActual = $juego;
+
+        $gameId = "game_" . $fila['partido'];
+
+        echo "
+            <div class='game-block'>
+
+                <div class='game-title'
+                    onclick=\"toggleGame('{$gameId}')\">
+
+                    <div>
+                        ⚽ {$juego}
+                    </div>
+
+                    <div>
+                        <span class='game-result'>
+                            Resultado: {$fila['resultado']}
+                        </span>
+
+                        <span
+                            id='arrow_{$gameId}'
+                            class='arrow'>
+                            ▶
+                        </span>
+                    </div>
+
+                </div>
+
+            <div id='{$gameId}' class='game-content'>
+
+                <table class='game-table'>
+
+                <thead>
+                    <tr>
+                        <th>Participante</th>
+                        <th>Pronóstico</th>
+                        <th>Puntos</th>
+                    </tr>
+                </thead>
+
+        <tbody>";
+    }
 
     echo "
     <tr>
         <td>{$nombre}</td>
-        <td>{$juego}</td>
         <td>{$fila['pronostico']}</td>
-        <td>{$fila['resultado']}</td>
         <td>{$fila['puntos']}</td>
     </tr>";
 }
 
+if($partidoActual != '')
+{
+    echo "
+    </tbody>
+    </table>
+    </div>
+    </div>";
+}
+
+
+
 ?>
 
-</table>
+<!-- </table> -->
 
 </div>
 
@@ -242,6 +228,19 @@ foreach($detalle as $fila)
 </div>
 
 </div>
+
+<script>
+
+function toggleGame(id)
+{
+    const content = document.getElementById(id);
+    const arrow = document.getElementById('arrow_'+id);
+
+    content.classList.toggle('active');
+    arrow.classList.toggle('rotate');
+}
+
+</script>
 
 </body>
 </html>
