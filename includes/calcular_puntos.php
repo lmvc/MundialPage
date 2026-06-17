@@ -1,18 +1,20 @@
 <?php
 
 require_once "funciones.php";
+require_once "config.php";
 
 $resultados = leerCSV(
-    __DIR__.'/../data/resultados.csv'
+    DATA_PATH . 'resultados.csv'
 );
 
 $pronosticos = leerCSV(
-    __DIR__.'/../data/pronosticos.csv'
+    DATA_PATH . 'pronosticos.csv'
 );
 
 $participantes = leerCSV(
-    __DIR__.'/../data/participantes.csv'
+    DATA_PATH . 'participantes.csv'
 );
+
 
 $puntos = [];
 $evolucion = [];

@@ -98,3 +98,4 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/vim,macos,windows,linux
 
 data/
+includes/config.php
