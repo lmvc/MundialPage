@@ -2,24 +2,66 @@
 
 $datos = include "includes/calcular_puntos.php";
 
-$evolucion = $datos['evolucion'];
+$puntos        = $datos['puntos'];
+$evolucion     = $datos['evolucion'];
 $participantes = $datos['participantes'];
-$puntos = $datos['puntos'];
+$estadisticas  = $datos['estadisticas'];
 
 /*
-Determinar el número máximo de partidos jugados
+--------------------------------------------------
+Ranking
+--------------------------------------------------
 */
+
+$ranking = [];
+
+foreach($participantes as $p)
+{
+    $id = $p['id'];
+
+    $ranking[] = [
+
+        'id'       => $id,
+        'nombre'   => $p['nombre'],
+        'puntos'   => $puntos[$id] ?? 0,
+        'exactos'  => $estadisticas[$id]['exactos'] ?? 0,
+        'ganador'  => $estadisticas[$id]['ganador'] ?? 0
+
+    ];
+}
+
+usort($ranking, function($a, $b){
+
+    if($a['puntos'] != $b['puntos'])
+    {
+        return $b['puntos'] <=> $a['puntos'];
+    }
+
+    if($a['exactos'] != $b['exactos'])
+    {
+        return $b['exactos'] <=> $a['exactos'];
+    }
+
+    return $b['ganador'] <=> $a['ganador'];
+
+});
+
+/*
+--------------------------------------------------
+Cantidad de partidos
+--------------------------------------------------
+*/
+
 $maxPartidos = 0;
 
 foreach($evolucion as $historial)
 {
-    $maxPartidos = max($maxPartidos, count($historial));
+    $maxPartidos = max(
+        $maxPartidos,
+        count($historial)
+    );
 }
 
-/*
-Etiquetas:
-Partido 1, Partido 2, ...
-*/
 $labels = [];
 
 for($i=1; $i<=$maxPartidos; $i++)
@@ -27,121 +69,230 @@ for($i=1; $i<=$maxPartidos; $i++)
     $labels[] = "P".$i;
 }
 
-arsort($puntos);
+/*
+--------------------------------------------------
+Datasets Chart.js
+--------------------------------------------------
+*/
 
-$nombres = [];
-$ranking = [];
+$datasets = [];
 
-foreach($participantes as $p)
+foreach($ranking as $jugador)
 {
-    $nombres[$p['id']] = $p['nombre'];
+    $id = $jugador['id'];
 
-    $id = $p['id'];
+    $color = sprintf(
+        '#%06X',
+        mt_rand(0, 0xFFFFFF)
+    );
 
-    $ranking[] = [
-        'id'       => $id,
-        'nombre'   => $p['nombre'],
-        'puntos'   => $puntos[$id] ?? 0,
-        'exactos'  => $estadisticas[$id]['exactos'] ?? 0,
-        'ganador'  => $estadisticas[$id]['ganador'] ?? 0
+    $datasets[] = [
+
+        'label' => $jugador['nombre'],
+
+        'data' => $evolucion[$id],
+
+        'fill' => false,
+
+        'tension' => 0.2,
+
+        'borderColor' => $color,
+
+        'backgroundColor' => $color,
+
+        'borderWidth' => 3
+
     ];
 }
 
+$totalPartidos =
+    count(
+        current($evolucion)
+    );
+
 ?>
+
 <!DOCTYPE html>
+
 <html lang="es">
 
 <head>
 
 <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1">
 
-<title>Evolución de Puntos</title>
+<title>
+📈 Evolución de Puntos
+</title>
 
-<link rel="stylesheet" href="css/style.css">
+<link
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+rel="stylesheet">
+
+<link rel="stylesheet"
+      href="css/style.css">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-
-body{
-    font-family: Arial;
-    padding:20px;
-}
-
-.chart-container{
-    width:95%;
-    max-width:1400px;
-    margin:auto;
-}
-
-</style>
 
 </head>
 
 <body>
 
-<div class="navbar">
-    <a href="index.php" class="btn-home">🏠 Inicio</a>
-</div>
+<!-- NAVBAR -->
 
-<h1>Evolución de la Quiniela</h1>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
 
-<div class="chart-container">
-    <canvas id="rankingChart"></canvas>
-</div>
 
-<?php
+<div class="container">
 
-$ranking = [];
+    <a class="navbar-brand"
+       href="index.php">
 
-foreach($participantes as $p)
-{
-    $id = $p['id'];
+        🏆 Mundial 2026
 
-    $ranking[] = [
-        'nombre'   => $p['nombre'],
-        'puntos'   => $puntos[$id] ?? 0,
-        'exactos'  => $estadisticas[$id]['exactos'] ?? 0,
-        'ganador'  => $estadisticas[$id]['ganador'] ?? 0
-    ];
-}
+    </a>
 
-usort($ranking, function($a, $b){
+    <button class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav">
 
-    if($a['puntos'] != $b['puntos'])
-        return $b['puntos'] <=> $a['puntos'];
+        <span class="navbar-toggler-icon"></span>
 
-    if($a['exactos'] != $b['exactos'])
-        return $b['exactos'] <=> $a['exactos'];
+    </button>
 
-    return $b['ganador'] <=> $a['ganador'];
-});
+    <div class="collapse navbar-collapse"
+         id="navbarNav">
 
-?>
+        <ul class="navbar-nav ms-auto">
 
-<div class="ranking-container">
+            <li class="nav-item">
 
-    <div class="ranking-title">
-        🏆 Ranking General
+                <a class="nav-link"
+                   href="index.php">
+
+                    Inicio
+
+                </a>
+
+            </li>
+
+            <li class="nav-item">
+
+                <a class="nav-link active"
+                   href="grafica.php">
+
+                    📈 Evolución
+
+                </a>
+
+            </li>
+
+            <li class="nav-item">
+
+                <a class="nav-link"
+                   href="historial.php">
+
+                    📋 Historial
+
+                </a>
+
+            </li>
+
+        </ul>
+
     </div>
 
-    <table class="ranking-table">
+</div>
+
+
+</nav>
+
+<!-- CONTENIDO -->
+
+<div class="container container-main">
+
+
+<!-- GRAFICA -->
+
+<div class="card-custom">
+
+    <div class="d-flex justify-content-between align-items-center">
+
+        <h2>
+            📈 Evolución de Puntos
+        </h2>
+
+        <a href="index.php"
+           class="btn btn-outline-primary">
+
+            ← Regresar
+
+        </a>
+
+    </div>
+
+    <hr>
+
+    <div class="alert alert-info">
+
+        <strong>
+            Partidos contabilizados:
+        </strong>
+
+        <?= $totalPartidos ?>
+
+        &nbsp; | &nbsp;
+
+        <strong>
+            Participantes:
+        </strong>
+
+        <?= count($participantes) ?>
+
+    </div>
+
+    <div class="chart-container">
+
+        <canvas id="rankingChart"></canvas>
+
+    </div>
+
+</div>
+
+<!-- TABLA -->
+
+<div class="card-custom">
+
+    <h2>
+        🏆 Ranking Completo
+    </h2>
+
+    <table
+        class="table table-striped table-hover ranking-full-table">
 
         <thead>
+
             <tr>
-                <th>Posición</th>
+
+                <th>Pos</th>
                 <th>Participante</th>
                 <th>Puntos</th>
-                <th>Marcador Exacto</th>
-                <th>Solo Ganador/Empate</th>
+                <th>Exactos</th>
+                <th>Ganador</th>
+                <th>Efectividad</th>
+
             </tr>
+
         </thead>
 
         <tbody>
 
         <?php
 
-        $totalJugadores = count($ranking);
+        $totalJugadores =
+            count($ranking);
 
         foreach($ranking as $indice => $jugador)
         {
@@ -150,36 +301,113 @@ usort($ranking, function($a, $b){
             $clase = '';
 
             if($indice == 0)
-                $clase = 'first-place';
+            {
+                $clase = 'gold';
+            }
 
-            elseif($indice == 1)
-                $clase = 'second-place';
-
-            elseif($indice == 2)
-                $clase = 'third-place';
-
-            elseif($indice == ($totalJugadores - 1))
+            if(
+                $jugador['exactos'] == 0 &&
+                $jugador['ganador'] == 0
+            )
+            {
                 $clase = 'last-place';
+            }
 
-            $icono = $posicion;
+            if(
+                $indice ==
+                $totalJugadores - 1
+            )
+            {
+                $clase = 'last-place';
+            }
 
-            if($posicion == 1)
-                $icono = '🥇';
+            $partidosJugados =
+                count(
+                    $evolucion[
+                        $jugador['id']
+                    ]
+                );
 
-            elseif($posicion == 2)
-                $icono = '🥈';
+            $efectividad = 0;
 
-            elseif($posicion == 3)
-                $icono = '🥉';
+            if($partidosJugados > 0)
+            {
+                $efectividad =
+                    (
+                        $jugador['puntos']
+                        /
+                        ($partidosJugados * 5)
+                    ) * 100;
+            }
 
-            echo "
-            <tr class='{$clase}'>
-                <td class='position-badge'>{$icono}</td>
-                <td>{$jugador['nombre']}</td>
-                <td>{$jugador['puntos']}</td>
-                <td>{$jugador['exactos']}</td>
-                <td>{$jugador['ganador']}</td>
-            </tr>";
+            ?>
+
+            <tr class="<?= $clase ?>">
+
+                <td>
+
+                <?php
+
+                switch($posicion)
+                {
+                    case 1:
+                        echo "🥇";
+                        break;
+
+                    case 2:
+                        echo "🥈";
+                        break;
+
+                    case 3:
+                        echo "🥉";
+                        break;
+
+                    default:
+                        echo "#".$posicion;
+                }
+
+                ?>
+
+                </td>
+
+                <td>
+
+                    <?= htmlspecialchars(
+                        $jugador['nombre']
+                    ) ?>
+
+                </td>
+
+                <td>
+
+                    <?= $jugador['puntos'] ?>
+
+                </td>
+
+                <td>
+
+                    <?= $jugador['exactos'] ?>
+
+                </td>
+
+                <td>
+
+                    <?= $jugador['ganador'] ?>
+
+                </td>
+
+                <td>
+
+                    <?= number_format(
+                        $efectividad,
+                        1
+                    ) ?>%
+
+                </td>
+
+            </tr>
+
+            <?php
         }
 
         ?>
@@ -190,112 +418,109 @@ usort($ranking, function($a, $b){
 
 </div>
 
+<div class="footer">
+
+    Quiniela Mundial 2026 · CIO AGS
+
+</div>
+
+
+</div>
+
 <script>
 
-const labels = <?= json_encode($labels) ?>;
+const ctx =
+document.getElementById(
+    'rankingChart'
+);
 
-const datasets = [
-
-<?php
-
-$colores = [
-'#FF6384',
-'#36A2EB',
-'#FFCE56',
-'#4BC0C0',
-'#9966FF',
-'#FF9F40',
-'#8BC34A',
-'#E91E63',
-'#795548',
-'#009688'
-];
-
-$indiceColor = 0;
-
-foreach($participantes as $participante)
+new Chart(
+ctx,
 {
-    $id = $participante['id'];
+    type:'line',
 
-    $historial = $evolucion[$id];
-
-    $color = $colores[$indiceColor % count($colores)];
-
-    echo "
+    data:
     {
-        label: '".$participante['nombre']."',
-        data: ".json_encode($historial).",
-        borderColor: '$color',
-        backgroundColor: '$color',
-        tension: 0.2,
-        fill:false
-    },
-    ";
+        labels:
+            <?= json_encode($labels) ?>,
 
-    $indiceColor++;
-}
-
-?>
-
-];
-
-const ctx = document.getElementById('rankingChart');
-
-new Chart(ctx, {
-
-    type: 'line',
-
-    data: {
-        labels: labels,
-        datasets: datasets
+        datasets:
+            <?= json_encode($datasets) ?>
     },
 
-    options: {
+    options:
+    {
+        responsive:true,
 
-        responsive: true,
+        maintainAspectRatio:false,
 
-        plugins: {
-
-            title: {
-                display: true,
-                text: 'Evolución de puntos por participante'
-            },
-
-            legend: {
-                position: 'bottom'
+        elements:
+        {
+            point:
+            {
+                radius:4
             }
-
         },
 
-        interaction: {
-            mode: 'index',
-            intersect: false
+        interaction:
+        {
+            mode:'nearest',
+            intersect:false
         },
 
-        scales: {
-
-            x: {
-                title: {
-                    display:true,
-                    text:'Partidos Jugados'
-                }
+        plugins:
+        {
+            legend:
+            {
+                position:'bottom'
             },
 
-            y: {
+            tooltip:
+            {
+                enabled:true,
+
+                callbacks:
+                {
+                    label:function(context)
+                    {
+                        return context.dataset.label
+                            + ': '
+                            + context.raw
+                            + ' pts';
+                    }
+                }
+            }
+        },
+
+        scales:
+        {
+            y:
+            {
                 beginAtZero:true,
-                title: {
+
+                title:
+                {
                     display:true,
                     text:'Puntos Acumulados'
                 }
+            },
+
+            x:
+            {
+                title:
+                {
+                    display:true,
+                    text:'Partidos'
+                }
             }
-
         }
-
     }
-
 });
 
+</script>
 
+<script
+src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
 </script>
 
 </body>
