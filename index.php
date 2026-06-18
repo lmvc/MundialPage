@@ -1,6 +1,10 @@
 <?php
 
+include
+"includes/actualizar_si_necesario.php";
+
 $datos = include "includes/calcular_puntos.php";
+
 
 $puntos        = $datos['puntos'];
 $participantes = $datos['participantes'];
