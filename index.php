@@ -1,7 +1,7 @@
 <?php
 
 include
-"includes/actualizar_si_necesario.php";
+    "includes/actualizar_si_necesario.php";
 
 $datos = include "includes/calcular_puntos.php";
 
@@ -190,12 +190,13 @@ NAVBAR
 
                     </li>
 
+
                     <li class="nav-item">
 
                         <a class="nav-link"
                             href="grafica.php">
 
-                            📈 Evolución
+                            📈 Evolución de Puntos
 
                         </a>
 
@@ -207,6 +208,18 @@ NAVBAR
                             href="historial.php">
 
                             📋 Historial
+
+                        </a>
+
+                    </li>
+
+                    <li class="nav-item ms-2">
+
+                        <a
+                            class="btn btn-warning text-dark fw-bold"
+                            href="capturar_pronosticos.php">
+
+                            ⚽ Registrar Pronósticos
 
                         </a>
 
