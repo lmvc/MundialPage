@@ -225,6 +225,18 @@ NAVBAR
 
                     </li>
 
+                    <li class="nav-item ms-2">
+
+                        <a
+                            class="btn btn-danger fw-bold"
+                            href="admin_pronosticos.php">
+
+                            ⚙ Admin
+
+                        </a>
+
+                    </li>
+
                 </ul>
 
             </div>

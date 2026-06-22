@@ -11,53 +11,53 @@ FUNCIONES
 --------------------------------------------------
 */
 
-function leerCSV($archivo)
-{
-    $datos = [];
+// function leerCSV($archivo)
+// {
+//     $datos = [];
 
-    if (!file_exists($archivo))
-        return $datos;
+//     if (!file_exists($archivo))
+//         return $datos;
 
-    $fp = fopen($archivo, "r");
+//     $fp = fopen($archivo, "r");
 
-    $cabecera =
-        fgetcsv(
-            $fp,
-            1000,
-            ",",
-            '"',
-            "\\"
-        );
+//     $cabecera =
+//         fgetcsv(
+//             $fp,
+//             1000,
+//             ",",
+//             '"',
+//             "\\"
+//         );
 
-    while (
-        ($fila =
-            fgetcsv(
-                $fp,
-                1000,
-                ",",
-                '"',
-                "\\"
-            )) !== false
-    ) {
-        if (
-            count($fila)
-            !=
-            count($cabecera)
-        ) {
-            continue;
-        }
+//     while (
+//         ($fila =
+//             fgetcsv(
+//                 $fp,
+//                 1000,
+//                 ",",
+//                 '"',
+//                 "\\"
+//             )) !== false
+//     ) {
+//         if (
+//             count($fila)
+//             !=
+//             count($cabecera)
+//         ) {
+//             continue;
+//         }
 
-        $datos[] =
-            array_combine(
-                $cabecera,
-                $fila
-            );
-    }
+//         $datos[] =
+//             array_combine(
+//                 $cabecera,
+//                 $fila
+//             );
+//     }
 
-    fclose($fp);
+//     fclose($fp);
 
-    return $datos;
-}
+//     return $datos;
+// }
 
 /*
 --------------------------------------------------
@@ -65,31 +65,91 @@ ARCHIVOS
 --------------------------------------------------
 */
 
+$db = new SQLite3(
+    DATA_PATH . "quiniela.db"
+);
 
+$db->busyTimeout(5000);
 
-$archivoParticipantes =
-    DATA_PATH . "participantes.csv";
+/*
+--------------------------------------------------
+PARTICIPANTES
+--------------------------------------------------
+*/
 
-$archivoPartidos =
-    DATA_PATH . "partidos.csv";
+$participantes = [];
 
-$archivoPronosticos =
-    DATA_PATH . "pronosticos.csv";
+$result =
+$db->query(
+"
+SELECT *
+FROM participantes
+ORDER BY nombre
+"
+);
 
-$participantes =
-    leerCSV(
-        $archivoParticipantes
-    );
+while(
+    $fila =
+    $result->fetchArray(
+        SQLITE3_ASSOC
+    )
+)
+{
+    $participantes[] =
+        $fila;
+}
 
-$partidos =
-    leerCSV(
-        $archivoPartidos
-    );
+/*
+--------------------------------------------------
+PARTIDOS
+--------------------------------------------------
+*/
 
-$pronosticos =
-    leerCSV(
-        $archivoPronosticos
-    );
+$partidos = [];
+
+$result =
+$db->query(
+"
+SELECT *
+FROM partidos
+ORDER BY partido
+"
+);
+
+while(
+    $fila =
+    $result->fetchArray(
+        SQLITE3_ASSOC
+    )
+)
+{
+    $partidos[] =
+        $fila;
+}
+
+// $archivoParticipantes =
+//     DATA_PATH . "participantes.csv";
+
+// $archivoPartidos =
+//     DATA_PATH . "partidos.csv";
+
+// $archivoPronosticos =
+//     DATA_PATH . "pronosticos.csv";
+
+// $participantes =
+//     leerCSV(
+//         $archivoParticipantes
+//     );
+
+// $partidos =
+//     leerCSV(
+//         $archivoPartidos
+//     );
+
+// $pronosticos =
+//     leerCSV(
+//         $archivoPronosticos
+//     );
 
 /*
 --------------------------------------------------
@@ -97,9 +157,8 @@ LOGIN
 --------------------------------------------------
 */
 
-if (
-    isset($_POST['login'])
-) {
+if (isset($_POST['login'])) 
+{
     $id =
         trim(
             $_POST['participante']
@@ -110,30 +169,115 @@ if (
             $_POST['clave']
         );
 
-    foreach (
-        $participantes as $p
-    ) {
-        if (
-            $p['id'] == $id
-            &&
-            password_verify(
-                $clave,
-                $p['password_hash']
-            )
-        ) {
-            $_SESSION['participante'] =
-                $id;
+    $stmt =    
+        $db->prepare(
+        "
+        SELECT *
+        FROM participantes
+        WHERE id = :id
+        "
+    );
 
-            header(
-                "Location: capturar_pronosticos.php"
-            );
+    $stmt->bindValue(
+        ':id',
+        intval($id),
+        SQLITE3_INTEGER
+    );
 
-            exit;
-        }
+    $result = $stmt->execute();
+
+    $p = $result->fetchArray(
+        SQLITE3_ASSOC
+    );
+
+    if(
+        $p &&
+        password_verify(
+            $clave,
+            $p['password_hash']
+        )
+    )
+    {
+
+    /*
+    --------------------------------------------------
+    COMPLETAR PARTIDOS FALTANTES
+    --------------------------------------------------
+    */
+
+    $stmt =
+    $db->prepare(
+    "
+    INSERT OR IGNORE INTO pronosticos
+    (
+        participante,
+        partido,
+        goles1,
+        goles2
+    )
+    SELECT
+        :participante,
+        partido,
+        'x',
+        'x'
+    FROM partidos
+    WHERE
+    (
+        estado <> 'STATUS_SCHEDULED'
+        OR
+        datetime(
+            substr(fecha,7,4)||'-'||
+            substr(fecha,4,2)||'-'||
+            substr(fecha,1,2)||' '||
+            substr(fecha,12,5)
+        ) <= datetime('now')
+    )
+    "
+    );
+
+    $stmt->bindValue(
+        ':participante',
+        intval($id),
+        SQLITE3_INTEGER
+    );
+
+    $stmt->execute();
+
+
+        $_SESSION['participante'] = $id;
+
+        header(
+            "Location: capturar_pronosticos.php"
+        );
+
+        exit;
     }
 
     $error =
-        "Clave incorrecta";
+    "Clave incorrecta";
+    // foreach ($participantes as $p ) 
+    // {
+    //     if (
+    //         $p['id'] == $id
+    //         &&
+    //         password_verify(
+    //             $clave,
+    //             $p['password_hash']
+    //         )
+    //     ) {
+    //         $_SESSION['participante'] =
+    //             $id;
+
+    //         header(
+    //             "Location: capturar_pronosticos.php"
+    //         );
+
+    //         exit;
+    //     }
+    // }
+
+    // $error =
+    //     "Clave incorrecta";
 }
 
 /*
@@ -142,267 +286,355 @@ GUARDAR
 --------------------------------------------------
 */
 
-if (isset($_POST['guardar'])  &&  isset($_SESSION['participante'])) 
+if(
+    isset($_POST['guardar'])
+    &&
+    isset($_SESSION['participante'])
+)
 {
     $id =
-        $_SESSION['participante'];
+    $_SESSION['participante'];
 
-    /*
-    índice existente
-    */
-
-    $indice = [];
-
-    foreach ($pronosticos as $k => $p) 
-    {
-        $indice[$p['participante']][$p['partido']] = $k;
-    }
-
-    foreach($partidos as $partido)
-    {
-        $num = $partido['partido'];
-
-
-        /*
-        --------------------------------------------------
-        VALIDAR CIERRE
-        --------------------------------------------------
-        */
-
-        $inicio =
-            DateTime::createFromFormat(
-                'd-m-Y H:i',
-                trim($partido['fecha'])
-            );
-
-        $inicioTimestamp =
-            $inicio
-            ?
-            $inicio->getTimestamp()
-            :
-            0;
-
-        $limite = $inicioTimestamp - 300;
-
-        $estado =
-            strtoupper(
-                trim(
-                    $partido['estado']
-                )
-            );
-
-        if( time() > $limite || $estado != 'STATUS_SCHEDULED')
-        {
-            continue;
-        }
-
-        /*
-        --------------------------------------------------
-        LEER FORMULARIO
-        --------------------------------------------------
-        */
-
-        $g1 =
-            trim(
-                $_POST[
-                    'g1_'.$num
-                ] ?? ''
-            );
-
-        $g2 =
-            trim(
-                $_POST[
-                    'g2_'.$num
-                ] ?? ''
-            );
-
-        /*
-        --------------------------------------------------
-        SI NO CAPTURÓ NADA
-        GUARDAR x-x
-        --------------------------------------------------
-        */
-
-        if( $g1 === '' ||  $g2 === '')
-        {
-            $g1 = 'x';
-            $g2 = 'x';
-        }
-
-        /*
-        --------------------------------------------------
-        ACTUALIZAR O INSERTAR
-        --------------------------------------------------
-        */
-
-        if( isset( $indice[$id][$num]) )
-        {
-            $k = $indice[$id][$num];
-
-            $pronosticos[$k]['goles1'] = $g1;
-
-            $pronosticos[$k]['goles2'] = $g2;
-        }
-        else
-        {
-            $pronosticos[] = [
-
-                'participante' => $id,
-
-                'partido' => $num,
-
-                'goles1' => $g1,
-
-                'goles2' => $g2
-
-            ];
-        }
-
-    }
-
-    // foreach ( $partidos as $partido ) 
-    // {
-    //     $num =
-    //         $partido['partido'];
-
-    //     $inicio =
-    //         DateTime::createFromFormat(
-    //             'd-m-Y H:i',
-    //             trim($partido['fecha'])
-    //         );
-
-    //     $inicioTimestamp =
-    //         $inicio
-    //         ?
-    //         $inicio->getTimestamp()
-    //         :
-    //         0;
-
-    //     $limite =
-    //         $inicioTimestamp - 300;
-
-    //     $estado =
-    //         strtoupper(
-    //             trim($partido['estado'])
-    //         );
-
-    //     if (
-    //         time() > $limite
-    //         ||
-    //         $estado != 'STATUS_SCHEDULED'
-    //     ) {
-    //         continue;
-    //     }
-
-
-    //     $g1 =
-    //         trim(
-    //             $_POST['g1_' . $num] ?? ''
-    //         );
-
-    //     $g2 =
-    //         trim(
-    //             $_POST['g2_' . $num] ?? ''
-    //         );
-
-    //     if (
-    //         $g1 === ''
-    //         ||
-    //         $g2 === ''
-    //     ) {
-    //         $g1 = 'x';
-    //         $g2 = 'x';
-    //     }
-
-    //     if (
-    //         isset(
-    //             $indice[$id][$num]
-    //         )
-    //     ) {
-    //         $k =
-    //             $indice[$id][$num];
-
-    //         $pronosticos[$k]['goles1'] =
-    //             $g1;
-
-    //         $pronosticos[$k]['goles2'] =
-    //             $g2;
-    //     } else {
-    //         $pronosticos[] = [
-
-    //             'participante' =>
-    //             $id,
-
-    //             'partido' =>
-    //             $num,
-
-    //             'goles1' =>
-    //             $g1,
-
-    //             'goles2' =>
-    //             $g2
-
-    //         ];
-    //     }
-    // }
-
-    foreach($partidos as $partido)
-    {
-        $num = $partido['partido'];
-
-        if( !isset( $indice[$id][$num]))
-        {
-            $pronosticos[] = [
-
-                'participante' => $id,
-
-                'partido' => $num,
-
-                'goles1' => 'x',
-
-                'goles2' => 'x'
-
-            ];
-        }
-
-    }
-
-
-    /*
-    Guardar CSV
-    */
-
-    $fp = fopen( $archivoPronosticos, "w" );
-
-    fputcsv(
-        $fp,
-        [
-            'participante',
-            'partido',
-            'goles1',
-            'goles2'
-        ],
-        ",",
-        '"',
-        "\\"
+    $db->exec(
+        "BEGIN IMMEDIATE TRANSACTION"
     );
 
-    foreach ($pronosticos as $p) 
+    try
     {
-        fputcsv(
-            $fp,
-            $p,
-            ",",
-            '"',
-            "\\"
+        foreach(
+            $partidos as $partido
+        )
+        {
+            $num =
+                $partido['partido'];
+
+            $inicio =
+                DateTime::createFromFormat(
+                    'd-m-Y H:i',
+                    trim(
+                        $partido['fecha']
+                    )
+                );
+
+            $inicioTimestamp =
+                $inicio
+                ?
+                $inicio->getTimestamp()
+                :
+                0;
+
+            $limite =
+                $inicioTimestamp - 300;
+
+            $estado =
+                strtoupper(
+                    trim(
+                        $partido['estado']
+                    )
+                );
+
+            if(
+                time() > $limite
+                ||
+                $estado != 'STATUS_SCHEDULED'
+            )
+            {
+                continue;
+            }
+
+            $g1 =
+                trim(
+                    $_POST[
+                        'g1_'.$num
+                    ] ?? ''
+                );
+
+            $g2 =
+                trim(
+                    $_POST[
+                        'g2_'.$num
+                    ] ?? ''
+                );
+
+            if(
+                $g1 === ''
+                ||
+                $g2 === ''
+            )
+            {
+                $g1 = 'x';
+                $g2 = 'x';
+            }
+
+            $stmt =
+            $db->prepare(
+            "
+            INSERT OR REPLACE INTO
+            pronosticos
+            (
+                participante,
+                partido,
+                goles1,
+                goles2
+            )
+            VALUES
+            (
+                :participante,
+                :partido,
+                :goles1,
+                :goles2
+            )
+            "
+            );
+
+            $stmt->bindValue(
+                ':participante',
+                intval($id),
+                SQLITE3_INTEGER
+            );
+
+            $stmt->bindValue(
+                ':partido',
+                intval($num),
+                SQLITE3_INTEGER
+            );
+
+            $stmt->bindValue(
+                ':goles1',
+                $g1,
+                SQLITE3_TEXT
+            );
+
+            $stmt->bindValue(
+                ':goles2',
+                $g2,
+                SQLITE3_TEXT
+            );
+
+            $stmt->execute();
+        }
+
+        
+        $stmt =
+        $db->prepare(
+        "
+        INSERT OR IGNORE INTO pronosticos
+        (
+            participante,
+            partido,
+            goles1,
+            goles2
+        )
+        SELECT
+            :participante,
+            partido,
+            'x',
+            'x'
+        FROM partidos
+        "
         );
+
+        $stmt->bindValue(
+            ':participante',
+            intval($id),
+            SQLITE3_INTEGER
+        );
+
+        $stmt->execute();
+
+
+        $db->exec(
+            "COMMIT"
+        );
+
+        $guardadoExitosamente =
+            true;
     }
+    catch(Exception $e)
+    {
+        $db->exec(
+            "ROLLBACK"
+        );
 
-    fclose($fp);
-
-    // $mensaje = "Pronósticos guardados";
-    $guardadoExitosamente = true;
+        $error =
+            $e->getMessage();
+    }
 }
+
+// if (isset($_POST['guardar'])  &&  isset($_SESSION['participante'])) 
+// {
+//     $id = $_SESSION['participante'];
+
+//     /*
+//     índice existente
+//     */
+
+//     $indice = [];
+
+//     foreach ($pronosticos as $k => $p) 
+//     {
+//         $indice[$p['participante']][$p['partido']] = $k;
+//     }
+
+//     foreach($partidos as $partido)
+//     {
+//         $num = $partido['partido'];
+
+
+//         /*
+//         --------------------------------------------------
+//         VALIDAR CIERRE
+//         --------------------------------------------------
+//         */
+
+//         $inicio =
+//             DateTime::createFromFormat(
+//                 'd-m-Y H:i',
+//                 trim($partido['fecha'])
+//             );
+
+//         $inicioTimestamp =
+//             $inicio
+//             ?
+//             $inicio->getTimestamp()
+//             :
+//             0;
+
+//         $limite = $inicioTimestamp - 300;
+
+//         $estado =
+//             strtoupper(
+//                 trim(
+//                     $partido['estado']
+//                 )
+//             );
+
+//         if( time() > $limite || $estado != 'STATUS_SCHEDULED')
+//         {
+//             continue;
+//         }
+
+//         /*
+//         --------------------------------------------------
+//         LEER FORMULARIO
+//         --------------------------------------------------
+//         */
+
+//         $g1 =
+//             trim(
+//                 $_POST[
+//                     'g1_'.$num
+//                 ] ?? ''
+//             );
+
+//         $g2 =
+//             trim(
+//                 $_POST[
+//                     'g2_'.$num
+//                 ] ?? ''
+//             );
+
+//         /*
+//         --------------------------------------------------
+//         SI NO CAPTURÓ NADA
+//         GUARDAR x-x
+//         --------------------------------------------------
+//         */
+
+//         if( $g1 === '' ||  $g2 === '')
+//         {
+//             $g1 = 'x';
+//             $g2 = 'x';
+//         }
+
+//         /*
+//         --------------------------------------------------
+//         ACTUALIZAR O INSERTAR
+//         --------------------------------------------------
+//         */
+
+//         if( isset( $indice[$id][$num]) )
+//         {
+//             $k = $indice[$id][$num];
+
+//             $pronosticos[$k]['goles1'] = $g1;
+
+//             $pronosticos[$k]['goles2'] = $g2;
+//         }
+//         else
+//         {
+//             $pronosticos[] = [
+
+//                 'participante' => $id,
+
+//                 'partido' => $num,
+
+//                 'goles1' => $g1,
+
+//                 'goles2' => $g2
+
+//             ];
+//         }
+
+//     }
+
+//     foreach($partidos as $partido)
+//     {
+//         $num = $partido['partido'];
+
+//         if( !isset( $indice[$id][$num]))
+//         {
+//             $pronosticos[] = [
+
+//                 'participante' => $id,
+
+//                 'partido' => $num,
+
+//                 'goles1' => 'x',
+
+//                 'goles2' => 'x'
+
+//             ];
+//         }
+
+//     }
+
+
+//     /*
+//     Guardar CSV
+//     */
+
+//     $fp = fopen( $archivoPronosticos, "w" );
+
+//     fputcsv(
+//         $fp,
+//         [
+//             'participante',
+//             'partido',
+//             'goles1',
+//             'goles2'
+//         ],
+//         ",",
+//         '"',
+//         "\\"
+//     );
+
+//     foreach ($pronosticos as $p) 
+//     {
+//         fputcsv(
+//             $fp,
+//             $p,
+//             ",",
+//             '"',
+//             "\\"
+//         );
+//     }
+
+//     fclose($fp);
+
+//     // $mensaje = "Pronósticos guardados";
+//     $guardadoExitosamente = true;
+// }
 
 /*
 --------------------------------------------------
@@ -640,21 +872,50 @@ NAVBAR
 
                 <?php
 
-                $id =
-                    $_SESSION['participante'];
+                $id = $_SESSION['participante'];
 
                 $existentes = [];
 
-                foreach (
-                    $pronosticos as $p
-                ) {
-                    if (
-                        $p['participante']
-                        == $id
-                    ) {
-                        $existentes[$p['partido']] = $p;
-                    }
+                $stmt =
+                $db->prepare(
+                    "
+                    SELECT *
+                    FROM pronosticos
+                    WHERE participante = :id
+                    "
+                );
+
+                $stmt->bindValue(
+                    ':id',
+                    intval($id),
+                    SQLITE3_INTEGER
+                );
+
+                $result =
+                $stmt->execute();
+
+                while(
+                    $fila =
+                    $result->fetchArray(
+                        SQLITE3_ASSOC
+                    )
+                )
+                {
+                    $existentes[
+                        $fila['partido']
+                    ] = $fila;
                 }
+                // $existentes = [];
+
+                // foreach ($pronosticos as $p) 
+                // {
+                //     if (
+                //         $p['participante']
+                //         == $id
+                //     ) {
+                //         $existentes[$p['partido']] = $p;
+                //     }
+                // }
 
                 foreach (
                     $partidos as $partido
