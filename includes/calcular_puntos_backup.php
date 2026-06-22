@@ -3,114 +3,29 @@
 require_once "funciones.php";
 require_once "config.php";
 
-/*
---------------------------------------------------
-SQLite
---------------------------------------------------
-*/
-
-$db = new SQLite3(
-    DATA_PATH . 'quiniela.db'
+$resultados = leerCSV(
+    DATA_PATH . 'resultados.csv'
 );
 
-$db->busyTimeout(5000);
-
-/*
---------------------------------------------------
-Participantes
---------------------------------------------------
-*/
-
-$participantes = [];
-
-$result =
-$db->query(
-"
-SELECT *
-FROM participantes
-ORDER BY id
-"
+$pronosticos = leerCSV(
+    DATA_PATH . 'pronosticos.csv'
 );
 
-while(
-    $fila =
-    $result->fetchArray(
-        SQLITE3_ASSOC
-    )
-)
-{
-    $participantes[] =
-        $fila;
-}
-
-/*
---------------------------------------------------
-Resultados
---------------------------------------------------
-*/
-
-$resultados = [];
-
-$result =
-$db->query(
-"
-SELECT *
-FROM resultados
-ORDER BY partido
-"
+$participantes = leerCSV(
+    DATA_PATH . 'participantes.csv'
 );
 
-while(
-    $fila =
-    $result->fetchArray(
-        SQLITE3_ASSOC
-    )
-)
-{
-    $resultados[] =
-        $fila;
-}
 
-/*
---------------------------------------------------
-Pronósticos
---------------------------------------------------
-*/
-
-$indicePronosticos = [];
-
-$result =
-$db->query(
-"
-SELECT *
-FROM pronosticos
-"
-);
-
-while(
-    $fila =
-    $result->fetchArray(
-        SQLITE3_ASSOC
-    )
-)
-{
-    $indicePronosticos[
-        $fila['participante']
-    ][
-        $fila['partido']
-    ] = $fila;
-}
+$puntos = [];
+$evolucion = [];
+$detalle = [];
+$estadisticas = [];
 
 /*
 --------------------------------------------------
 Inicialización
 --------------------------------------------------
 */
-
-$puntos = [];
-$evolucion = [];
-$detalle = [];
-$estadisticas = [];
 
 foreach($participantes as $p)
 {
@@ -130,29 +45,42 @@ foreach($participantes as $p)
 
 /*
 --------------------------------------------------
-Procesar Resultados
+Indice de pronósticos
+--------------------------------------------------
+*/
+
+$indicePronosticos = [];
+
+foreach($pronosticos as $pron)
+{
+    $indicePronosticos[
+        $pron['participante']
+    ][
+        $pron['partido']
+    ] = $pron;
+}
+
+/*
+--------------------------------------------------
+Procesar partidos
 --------------------------------------------------
 */
 
 foreach($resultados as $resultado)
 {
-    $partido =
-        $resultado['partido'];
+    $partido = $resultado['partido'];
 
-    $real1 =
-        intval(
-            $resultado['goles1']
-        );
+    $real1 = intval(
+        $resultado['goles1']
+    );
 
-    $real2 =
-        intval(
-            $resultado['goles2']
-        );
+    $real2 = intval(
+        $resultado['goles2']
+    );
 
     foreach($participantes as $participante)
     {
-        $id =
-            $participante['id'];
+        $id = $participante['id'];
 
         $puntosPartido = 0;
 
@@ -175,36 +103,26 @@ foreach($resultados as $resultado)
                 . $pron['goles2'];
 
             if(
-                strtolower(
-                    trim(
-                        $pron['goles1']
-                    )
-                ) != 'x'
+                strtolower(trim($pron['goles1'])) != 'x'
                 &&
-                strtolower(
-                    trim(
-                        $pron['goles2']
-                    )
-                ) != 'x'
+                strtolower(trim($pron['goles2'])) != 'x'
             )
             {
                 $pronosticoValido = true;
 
-                $pred1 =
-                    intval(
-                        $pron['goles1']
-                    );
+                $pred1 = intval(
+                    $pron['goles1']
+                );
 
-                $pred2 =
-                    intval(
-                        $pron['goles2']
-                    );
+                $pred2 = intval(
+                    $pron['goles2']
+                );
             }
         }
 
         /*
         ------------------------------------------
-        Puntuación
+        Cálculo de puntos
         ------------------------------------------
         */
 
@@ -247,14 +165,13 @@ foreach($resultados as $resultado)
             }
         }
 
+        $puntos[$id] += $puntosPartido;
+
         /*
         ------------------------------------------
-        Acumulado
+        Evolución sincronizada
         ------------------------------------------
         */
-
-        $puntos[$id] +=
-            $puntosPartido;
 
         $evolucion[$id][] =
             $puntos[$id];
@@ -267,11 +184,9 @@ foreach($resultados as $resultado)
 
         $detalle[] = [
 
-            'participante' =>
-                $id,
+            'participante' => $id,
 
-            'partido' =>
-                $partido,
+            'partido' => $partido,
 
             'equipo1' =>
                 $resultado['equipo1'],
@@ -283,11 +198,7 @@ foreach($resultados as $resultado)
                 $pronosticoTexto,
 
             'resultado' =>
-                $real1
-                .
-                '-'
-                .
-                $real2,
+                $real1.'-'.$real2,
 
             'puntos' =>
                 $puntosPartido
@@ -298,34 +209,21 @@ foreach($resultados as $resultado)
 
 /*
 --------------------------------------------------
-Cerrar SQLite
---------------------------------------------------
-*/
-
-$db->close();
-
-/*
---------------------------------------------------
 Return
 --------------------------------------------------
 */
 
 return [
 
-    'puntos' =>
-        $puntos,
+    'puntos' => $puntos,
 
-    'evolucion' =>
-        $evolucion,
+    'evolucion' => $evolucion,
 
-    'participantes' =>
-        $participantes,
+    'participantes' => $participantes,
 
-    'detalle' =>
-        $detalle,
+    'detalle' => $detalle,
 
-    'estadisticas' =>
-        $estadisticas
+    'estadisticas' => $estadisticas
 
 ];
 ?>
