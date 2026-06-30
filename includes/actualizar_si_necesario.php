@@ -4,7 +4,7 @@ require_once "config.php";
 
 $archivo = DATA_PATH . 'resultados.csv';
 
-$MINUTOS_ACTUALIZACION = 180; // 3 horas
+$MINUTOS_ACTUALIZACION = 180; // 3 horas (180)
 
 $actualizar = false;
 

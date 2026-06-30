@@ -30,13 +30,13 @@ $fechaInicio = "20260601";
 $fechaFin    = "20260730";
 
 $url =
-"https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates="
-.
-$fechaInicio
-.
-"-"
-.
-$fechaFin;
+    "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates="
+    .
+    $fechaInicio
+    .
+    "-"
+    .
+    $fechaFin;
 
 $ch = curl_init();
 
@@ -65,38 +65,30 @@ curl_setopt(
 );
 
 $json =
-curl_exec($ch);
+    curl_exec($ch);
 
-if(curl_errno($ch))
-{
-    die(
-        "Error ESPN: "
+if (curl_errno($ch)) {
+    die("Error ESPN: "
         .
-        curl_error($ch)
-    );
+        curl_error($ch));
 }
 
 // curl_close($ch);
 
 $datosApi =
-json_decode(
-    $json,
-    true
-);
+    json_decode(
+        $json,
+        true
+    );
 
-if(
+if (
     !$datosApi
     ||
-    empty(
-        $datosApi['events']
-    )
-)
-{
-    die(
-        date('Y-m-d H:i:s')
+    empty($datosApi['events'])
+) {
+    die(date('Y-m-d H:i:s')
         .
-        " - No se recibieron eventos."
-    );
+        " - No se recibieron eventos.");
 }
 
 /*
@@ -106,7 +98,7 @@ TABLA RESULTADOS
 */
 
 $db->exec(
-"
+    "
 CREATE TABLE IF NOT EXISTS resultados
 (
     partido INTEGER PRIMARY KEY,
@@ -129,8 +121,7 @@ $db->exec(
     "BEGIN IMMEDIATE TRANSACTION"
 );
 
-try
-{
+try {
     /*
     Vaciar resultados previos
     para reconstruirlos
@@ -141,8 +132,8 @@ try
     );
 
     $stmt =
-    $db->prepare(
-    "
+        $db->prepare(
+            "
     INSERT OR REPLACE INTO resultados
     (
         partido,
@@ -162,45 +153,57 @@ try
         :fase
     )
     "
-    );
+        );
 
     $contador = 1;
 
-    foreach(
+    foreach (
         $datosApi['events']
         as $evento
-    )
-    {
+    ) {
         $competencia =
-            $evento[
-                'competitions'
-            ][0];
+            $evento['competitions'][0];
 
         /*
         Solo terminados
         */
 
-        if(
-            $competencia
-            ['status']
-            ['type']
-            ['name']
-            !==
-            "STATUS_FULL_TIME"
-        )
-        {
+        $estado =
+            $competencia['status']['type']['name'];
+
+        $estadosFinalizados = [
+
+            'STATUS_FULL_TIME',
+            'STATUS_FINAL_PEN',
+
+        ];
+
+        if (
+            !in_array(
+                $estado,
+                $estadosFinalizados
+            )
+        ) {
             continue;
         }
+        // if(
+        //     $competencia
+        //     ['status']
+        //     ['type']
+        //     ['name']
+        //     !==
+        //     "STATUS_FULL_TIME"
+        // )
+        // {
+        //     continue;
+        // }
 
         $competitors =
-            $competencia[
-                'competitors'
-            ];
+            $competencia['competitors'];
 
         $home =
             (
-                $competitors[0]
-                ['homeAway']
+                $competitors[0]['homeAway']
                 ===
                 'home'
             )
@@ -211,8 +214,7 @@ try
 
         $away =
             (
-                $competitors[0]
-                ['homeAway']
+                $competitors[0]['homeAway']
                 ===
                 'away'
             )
@@ -229,15 +231,13 @@ try
 
         $stmt->bindValue(
             ':equipo1',
-            $home['team']
-                 ['displayName'],
+            $home['team']['displayName'],
             SQLITE3_TEXT
         );
 
         $stmt->bindValue(
             ':equipo2',
-            $away['team']
-                 ['displayName'],
+            $away['team']['displayName'],
             SQLITE3_TEXT
         );
 
@@ -259,8 +259,7 @@ try
 
         $stmt->bindValue(
             ':fase',
-            $evento['season']
-                   ['slug'],
+            $evento['season']['slug'],
             SQLITE3_TEXT
         );
 
@@ -275,26 +274,20 @@ try
 
     echo
     date('Y-m-d H:i:s')
-    .
-    " - Resultados actualizados: "
-    .
-    ($contador - 1)
-    .
-    " partidos.";
-}
-catch(Exception $e)
-{
+        .
+        " - Resultados actualizados: "
+        .
+        ($contador - 1)
+        .
+        " partidos.";
+} catch (Exception $e) {
     $db->exec(
         "ROLLBACK"
     );
 
-    die(
-        "Error: "
+    die("Error: "
         .
-        $e->getMessage()
-    );
+        $e->getMessage());
 }
 
 $db->close();
-
-?>

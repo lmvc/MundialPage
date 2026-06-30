@@ -5,59 +5,6 @@ require_once "includes/config.php";
 
 session_start();
 
-/*
---------------------------------------------------
-FUNCIONES
---------------------------------------------------
-*/
-
-// function leerCSV($archivo)
-// {
-//     $datos = [];
-
-//     if (!file_exists($archivo))
-//         return $datos;
-
-//     $fp = fopen($archivo, "r");
-
-//     $cabecera =
-//         fgetcsv(
-//             $fp,
-//             1000,
-//             ",",
-//             '"',
-//             "\\"
-//         );
-
-//     while (
-//         ($fila =
-//             fgetcsv(
-//                 $fp,
-//                 1000,
-//                 ",",
-//                 '"',
-//                 "\\"
-//             )) !== false
-//     ) {
-//         if (
-//             count($fila)
-//             !=
-//             count($cabecera)
-//         ) {
-//             continue;
-//         }
-
-//         $datos[] =
-//             array_combine(
-//                 $cabecera,
-//                 $fila
-//             );
-//     }
-
-//     fclose($fp);
-
-//     return $datos;
-// }
 
 /*
 --------------------------------------------------
@@ -414,7 +361,7 @@ if(
             $stmt->execute();
         }
 
-        
+
         $stmt =
         $db->prepare(
         "
