@@ -175,6 +175,7 @@ try {
 
             'STATUS_FULL_TIME',
             'STATUS_FINAL_PEN',
+            'STATUS_FINAL_AET',
 
         ];
 
