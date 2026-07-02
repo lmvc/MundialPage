@@ -242,19 +242,95 @@ try {
             SQLITE3_TEXT
         );
 
+        // $home =
+        // (
+        //     $competitors[0]['homeAway']
+        //     ===
+        //     'home'
+        // )
+        // ?
+        // $competitors[0]
+        // :
+        // $competitors[1];
+        
+        // $away =
+        // (
+        //     $competitors[0]['homeAway']
+        //     ===
+        //     'away'
+        // )
+        // ?
+        // $competitors[0]
+        // :
+        // $competitors[1];
+        
+        /*
+        --------------------------------------------------
+        MARCADOR ESPN
+        --------------------------------------------------
+        */
+        
+        $homeScore =
+        intval(
+            $home['score']
+        );
+        
+        $awayScore =
+        intval(
+            $away['score']
+        );
+        
+        /*
+        --------------------------------------------------
+        EXCEPCIONES MANUALES
+        --------------------------------------------------
+        */
+        
+        $marcadoresManuales = [
+        
+            81 => [2,2],
+        
+        ];
+        
+        if(
+            isset(
+                $marcadoresManuales[$contador]
+            )
+        )
+        {
+            $homeScore =
+                $marcadoresManuales[$contador][0];
+        
+            $awayScore =
+                $marcadoresManuales[$contador][1];
+        }
+        
+        /*
+        --------------------------------------------------
+        INSERT SQLITE
+        --------------------------------------------------
+        */
+        
+        $stmt->bindValue(
+            ':partido',
+            $contador,
+            SQLITE3_INTEGER
+        );
         $stmt->bindValue(
             ':goles1',
-            intval(
-                $home['score']
-            ),
+            // intval(
+            //     $home['score']
+            // ),
+            $homeScore,
             SQLITE3_INTEGER
         );
 
         $stmt->bindValue(
             ':goles2',
-            intval(
-                $away['score']
-            ),
+            // intval(
+            //     $away['score']
+            // ),
+            $awayScore,
             SQLITE3_INTEGER
         );
 
