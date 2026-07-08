@@ -279,6 +279,9 @@ foreach($resultados as $resultado)
             'equipo2' =>
                 $resultado['equipo2'],
 
+            'fase' =>
+                $resultado['fase'] ?? '',
+
             'pronostico' =>
                 $pronosticoTexto,
 

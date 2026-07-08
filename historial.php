@@ -29,15 +29,58 @@ usort($detalle, function ($a, $b) {
 });
 
 /*
-    Agrupar por partido
+    Agrupar por fase y por partido
 */
-$partidos = [];
+function normalizarFase($fase, $partido)
+{
+    $fase = strtolower(trim((string) $fase));
+
+    if (strpos($fase, 'group') !== false) {
+        return 'Group';
+    }
+
+    if (strpos($fase, 'round of 32') !== false || strpos($fase, 'round-of-32') !== false) {
+        return 'Round of 32';
+    }
+
+    if (strpos($fase, 'round of 16') !== false || strpos($fase, 'round-of-16') !== false) {
+        return 'Round of 16';
+    }
+
+    if (strpos($fase, 'quarterfinals') !== false || strpos($fase, 'quarter-finals') !== false) {
+        return 'Quarterfinals';
+    }
+
+    if ($partido <= 48) {
+        return 'Group';
+    }
+
+    if ($partido <= 64) {
+        return 'Round of 32';
+    }
+
+    if ($partido <= 80) {
+        return 'Round of 16';
+    }
+
+    return 'Quarterfinals';
+}
+
+$partidosPorFase = [];
 
 foreach ($detalle as $fila) {
     $idPartido = $fila['partido'];
+    $nombreFase = normalizarFase($fila['fase'] ?? '', $idPartido);
 
-    if (!isset($partidos[$idPartido])) {
-        $partidos[$idPartido] = [
+    if (!isset($partidosPorFase[$nombreFase])) {
+        $partidosPorFase[$nombreFase] = [
+            'nombre' => $nombreFase,
+            'partidos' => []
+        ];
+    }
+
+    if (!isset($partidosPorFase[$nombreFase]['partidos'][$idPartido])) {
+        $partidosPorFase[$nombreFase]['partidos'][$idPartido] = [
             'partido' => $idPartido,
             'equipo1' => $fila['equipo1'],
             'equipo2' => $fila['equipo2'],
@@ -46,8 +89,10 @@ foreach ($detalle as $fila) {
         ];
     }
 
-    $partidos[$idPartido]['pronosticos'][] = $fila;
+    $partidosPorFase[$nombreFase]['partidos'][$idPartido]['pronosticos'][] = $fila;
 }
+
+$gruposFase = array_values($partidosPorFase);
 
 ?>
 
@@ -157,123 +202,169 @@ foreach ($detalle as $fila) {
 
             <hr>
 
-            <div class="accordion" id="accordionPartidos">
+<div class="accordion" id="accordionFases">
 
-                <?php
+                <?php foreach ($gruposFase as $indexFase => $faseGrupo): ?>
 
-                $contador = 0;
-
-                foreach ($partidos as $partido):
-
-                    $contador++;
-
-                    $accordionId = "partido_" . $partido['partido'];
-
-                ?>
-
-                    <div class="accordion-item">
+                    <div class="accordion-item phase-section">
 
                         <h2 class="accordion-header"
-                            id="heading<?= $accordionId ?>">
+                            id="headingFase<?= $indexFase ?>">
 
                             <button
-                                class="accordion-button collapsed"
+                                class="accordion-button collapsed phase-button"
                                 type="button"
                                 data-bs-toggle="collapse"
-                                data-bs-target="#collapse<?= $accordionId ?>">
+                                data-bs-target="#collapseFase<?= $indexFase ?>">
 
-                                ⚽ Partido <?= $partido['partido'] ?>
+                                <div class="d-flex justify-content-between align-items-center w-100 gap-3">
+                                    <div class="text-start">
+                                        <span class="phase-title">
+                                            <?= htmlspecialchars($faseGrupo['nombre']) ?>
+                                        </span>
+                                        <div class="phase-meta">
+                                            <?= count($faseGrupo['partidos']) ?> partidos
+                                        </div>
+                                    </div>
 
-                                &nbsp;&nbsp;|
-
-                                &nbsp;&nbsp;
-
-                                <?= htmlspecialchars($partido['equipo1']) ?>
-
-                                vs
-
-                                <?= htmlspecialchars($partido['equipo2']) ?>
-
-                                &nbsp;&nbsp;—
-
-                                &nbsp;&nbsp;
-
-                                Resultado:
-                                <?= htmlspecialchars($partido['resultado']) ?>
+                                    <span class="badge bg-primary rounded-pill">
+                                        Ver partidos
+                                    </span>
+                                </div>
 
                             </button>
 
                         </h2>
 
-                        <div id="collapse<?= $accordionId ?>"
+                        <div id="collapseFase<?= $indexFase ?>"
                             class="accordion-collapse collapse"
-                            data-bs-parent="#accordionPartidos">
+                            data-bs-parent="#accordionFases">
 
                             <div class="accordion-body">
 
-                                <table class="table table-striped table-bordered history-table">
+                                <div class="accordion" id="accordionPartidos<?= $indexFase ?>">
 
-                                    <thead>
-
-                                        <tr>
-
-                                            <th>Participante</th>
-                                            <th>Pronóstico</th>
-                                            <th>Puntos</th>
-
-                                        </tr>
-
-                                    </thead>
-
-                                    <tbody>
+                                    <?php foreach ($faseGrupo['partidos'] as $partido): ?>
 
                                         <?php
 
-                                        foreach ($partido['pronosticos'] as $pron):
-
-                                            $nombre =
-                                                $nombres[$pron['participante']]
-                                                ?? 'Desconocido';
+                                        $accordionId = "partido_" . $partido['partido'] . "_" . $indexFase;
 
                                         ?>
 
-                                            <tr>
+                                        <div class="accordion-item">
 
-                                                <td>
+                                            <h3 class="accordion-header"
+                                                id="heading<?= $accordionId ?>">
 
-                                                    <?= htmlspecialchars($nombre) ?>
+                                                <button
+                                                    class="accordion-button collapsed"
+                                                    type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#collapse<?= $accordionId ?>">
 
-                                                </td>
+                                                    ⚽ Partido <?= $partido['partido'] ?>
 
-                                                <td>
+                                                    &nbsp;&nbsp;|
 
-                                                    <?= htmlspecialchars($pron['pronostico']) ?>
+                                                    &nbsp;&nbsp;
 
-                                                </td>
+                                                    <?= htmlspecialchars($partido['equipo1']) ?>
 
-                                                <td>
+                                                    vs
 
-                                                    <?php
+                                                    <?= htmlspecialchars($partido['equipo2']) ?>
 
-                                                    if ($pron['puntos'] == 5) {
-                                                        echo "🎯 5";
-                                                    } elseif ($pron['puntos'] == 3) {
-                                                        echo "✅ 3";
-                                                    } else {
-                                                        echo "❌ 0";
-                                                    }
+                                                    &nbsp;&nbsp;—
 
-                                                    ?>
+                                                    &nbsp;&nbsp;
 
-                                                </td>
+                                                    Resultado:
+                                                    <?= htmlspecialchars($partido['resultado']) ?>
 
-                                            </tr>
+                                                </button>
 
-                                        <?php endforeach; ?>
+                                            </h3>
 
-                                    </tbody>
+                                            <div id="collapse<?= $accordionId ?>"
+                                                class="accordion-collapse collapse"
+                                                data-bs-parent="#accordionPartidos<?= $indexFase ?>">
 
-                                </table>
+                                                <div class="accordion-body">
+
+                                                    <table class="table table-striped table-bordered history-table">
+
+                                                        <thead>
+
+                                                            <tr>
+
+                                                                <th>Participante</th>
+                                                                <th>Pronóstico</th>
+                                                                <th>Puntos</th>
+
+                                                            </tr>
+
+                                                        </thead>
+
+                                                        <tbody>
+
+                                                            <?php
+
+                                                            foreach ($partido['pronosticos'] as $pron):
+
+                                                                $nombre =
+                                                                    $nombres[$pron['participante']]
+                                                                    ?? 'Desconocido';
+
+                                                            ?>
+
+                                                                <tr>
+
+                                                                    <td>
+
+                                                                        <?= htmlspecialchars($nombre) ?>
+
+                                                                    </td>
+
+                                                                    <td>
+
+                                                                        <?= htmlspecialchars($pron['pronostico']) ?>
+
+                                                                    </td>
+
+                                                                    <td>
+
+                                                                        <?php
+
+                                                                        if ($pron['puntos'] == 5) {
+                                                                            echo "🎯 5";
+                                                                        } elseif ($pron['puntos'] == 3) {
+                                                                            echo "✅ 3";
+                                                                        } else {
+                                                                            echo "❌ 0";
+                                                                        }
+
+                                                                        ?>
+
+                                                                    </td>
+
+                                                                </tr>
+
+                                                            <?php endforeach; ?>
+
+                                                        </tbody>
+
+                                                    </table>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    <?php endforeach; ?>
+
+                                </div>
 
                             </div>
 

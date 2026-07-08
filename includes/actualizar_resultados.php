@@ -289,6 +289,7 @@ try {
         $marcadoresManuales = [
         
             81 => [2,2],
+            87 => [1,1],
         
         ];
         
