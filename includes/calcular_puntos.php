@@ -134,6 +134,46 @@ Procesar Resultados
 --------------------------------------------------
 */
 
+function puntosPorFase($fase)
+{
+    $fase = strtolower(trim((string) $fase));
+
+    if(
+        strpos($fase, 'quarterfinals') !== false
+        || strpos($fase, 'quarter-finals') !== false
+    )
+    {
+        return [
+            'exacto' => 8,
+            'ganador' => 5
+        ];
+    }
+
+    if(
+        strpos($fase, 'semifinal') !== false
+        || strpos($fase, 'semifinals') !== false
+    )
+    {
+        return [
+            'exacto' => 10,
+            'ganador' => 6
+        ];
+    }
+
+    if(strpos($fase, 'final') !== false)
+    {
+        return [
+            'exacto' => 15,
+            'ganador' => 8
+        ];
+    }
+
+    return [
+        'exacto' => 5,
+        'ganador' => 3
+    ];
+}
+
 foreach($resultados as $resultado)
 {
     $partido =
@@ -210,13 +250,17 @@ foreach($resultados as $resultado)
 
         if($pronosticoValido)
         {
+            $puntosFase = puntosPorFase(
+                $resultado['fase'] ?? ''
+            );
+
             if(
                 $real1 == $pred1
                 &&
                 $real2 == $pred2
             )
             {
-                $puntosPartido = 5;
+                $puntosPartido = $puntosFase['exacto'];
 
                 $estadisticas[$id]['exactos']++;
             }
@@ -240,7 +284,7 @@ foreach($resultados as $resultado)
                     $ganadorPred
                 )
                 {
-                    $puntosPartido = 3;
+                    $puntosPartido = $puntosFase['ganador'];
 
                     $estadisticas[$id]['ganador']++;
                 }

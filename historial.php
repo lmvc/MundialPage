@@ -51,19 +51,19 @@ function normalizarFase($fase, $partido)
         return 'Quarterfinals';
     }
 
-    if ($partido <= 48) {
-        return 'Group';
-    }
+    // if ($partido <= 48) {
+    //     return 'Group';
+    // }
 
-    if ($partido <= 64) {
-        return 'Round of 32';
-    }
+    // if ($partido <= 64) {
+    //     return 'Round of 32';
+    // }
 
-    if ($partido <= 80) {
-        return 'Round of 16';
-    }
+    // if ($partido <= 80) {
+    //     return 'Round of 16';
+    // }
 
-    return 'Quarterfinals';
+    // return 'Quarterfinals';
 }
 
 $partidosPorFase = [];
@@ -336,13 +336,50 @@ $gruposFase = array_values($partidosPorFase);
 
                                                                         <?php
 
-                                                                        if ($pron['puntos'] == 5) {
-                                                                            echo "🎯 5";
-                                                                        } elseif ($pron['puntos'] == 3) {
-                                                                            echo "✅ 3";
+                                                                        // echo "Fase: " . print_r($faseGrupo['nombre'], true) . "<br>";
+
+
+                                                                        if (
+                                                                            strpos($faseGrupo['nombre'], 'Quarterfinals') !== false
+                                                                            || strpos($faseGrupo['nombre'], 'quarter-finals') !== false
+                                                                        ) {
+                                                                            if ($pron['puntos'] === 8) {
+                                                                                $icono = '🎯';
+                                                                            } elseif ($pron['puntos'] === 5) {
+                                                                                $icono = '✅';
+                                                                            } else {
+                                                                                $icono = '❌';
+                                                                            }
+                                                                        } elseif (
+                                                                            strpos($faseGrupo['nombre'], 'semifinal') !== false
+                                                                            || strpos($faseGrupo['nombre'], 'semifinals') !== false
+                                                                        ) {
+                                                                            if ($pron['puntos'] === 10) {
+                                                                                $icono = '🎯';
+                                                                            } elseif ($pron['puntos'] === 6) {
+                                                                                $icono = '✅';
+                                                                            } else {
+                                                                                $icono = '❌';
+                                                                            }
+                                                                        } elseif (strpos($faseGrupo['nombre'], 'final') !== false) {
+                                                                            if ($pron['puntos'] === 15) {
+                                                                                $icono = '🎯';
+                                                                            } elseif ($pron['puntos'] === 8) {
+                                                                                $icono = '✅';
+                                                                            } else {
+                                                                                $icono = '❌';
+                                                                            }
                                                                         } else {
-                                                                            echo "❌ 0";
+                                                                            if ($pron['puntos'] === 5) {
+                                                                                $icono = '🎯';
+                                                                            } elseif ($pron['puntos'] === 3) {
+                                                                                $icono = '✅';
+                                                                            } else {
+                                                                                $icono = '❌';
+                                                                            }
                                                                         }
+
+                                                                        echo $icono . ' ' . $pron['puntos'];
 
                                                                         ?>
 
