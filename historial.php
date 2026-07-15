@@ -51,6 +51,15 @@ function normalizarFase($fase, $partido)
         return 'Quarterfinals';
     }
 
+    if (strpos($fase, 'semifinal') !== false || strpos($fase, 'semi-final') !== false || strpos($fase, 'semi-finals') !== false) {
+        return 'Semifinals';
+    }
+
+    if (strpos($fase, 'final') !== false) {
+        return 'Final';
+    }
+
+    // Fallback por número de partido
     // if ($partido <= 48) {
     //     return 'Group';
     // }
@@ -63,7 +72,15 @@ function normalizarFase($fase, $partido)
     //     return 'Round of 16';
     // }
 
-    // return 'Quarterfinals';
+    // if ($partido <= 88) {
+    //     return 'Quarterfinals';
+    // }
+
+    // if ($partido <= 90) {
+    //     return 'Semifinals';
+    // }
+
+    // return 'Final';
 }
 
 $partidosPorFase = [];
@@ -351,8 +368,9 @@ $gruposFase = array_values($partidosPorFase);
                                                                                 $icono = '❌';
                                                                             }
                                                                         } elseif (
-                                                                            strpos($faseGrupo['nombre'], 'semifinal') !== false
+                                                                            strpos($faseGrupo['nombre'], 'Semifinals') !== false
                                                                             || strpos($faseGrupo['nombre'], 'semifinals') !== false
+                                                                            || strpos($faseGrupo['nombre'], 'semi-finals') !== false
                                                                         ) {
                                                                             if ($pron['puntos'] === 10) {
                                                                                 $icono = '🎯';

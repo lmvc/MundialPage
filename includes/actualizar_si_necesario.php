@@ -2,7 +2,7 @@
 
 require_once "config.php";
 
-$archivo = DATA_PATH . 'resultados.csv';
+$archivo = DATA_PATH . 'quiniela.db';
 
 $MINUTOS_ACTUALIZACION = 180; // 3 horas (180)
 
