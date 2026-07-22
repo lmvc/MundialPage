@@ -32,5 +32,21 @@ $resultadosManuales = [
         'goles1' => 1,
         'goles2' => 2,
         'fase' => 'semifinals'
+    ],
+    [
+        'partido' => 103,
+        'equipo1' => 'France',
+        'equipo2' => 'England',
+        'goles1' => 4,
+        'goles2' => 6,
+        'fase' => 'third-place'
+    ],  
+    [
+        'partido' => 104,
+        'equipo1' => 'Spain',
+        'equipo2' => 'Argentina',
+        'goles1' => 0,
+        'goles2' => 0,
+        'fase' => 'final'
     ]
 ];

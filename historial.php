@@ -35,31 +35,34 @@ function normalizarFase($fase, $partido)
 {
     $fase = strtolower(trim((string) $fase));
 
-    if (strpos($fase, 'group') !== false) {
+    if (preg_match('/group|group-stage/', $fase)) {
         return 'Group';
     }
 
-    if (strpos($fase, 'round of 32') !== false || strpos($fase, 'round-of-32') !== false) {
+    if (preg_match('/round\s*of\s*32|round-?of-?32|round\s*32|round32/', $fase)) {
         return 'Round of 32';
     }
 
-    if (strpos($fase, 'round of 16') !== false || strpos($fase, 'round-of-16') !== false) {
+    if (preg_match('/round\s*of\s*16|round-?of-?16|round\s*16|round16/', $fase)) {
         return 'Round of 16';
     }
 
-    if (strpos($fase, 'quarterfinals') !== false || strpos($fase, 'quarter-finals') !== false) {
+    if (preg_match('/quarterfinals|quarter[- ]finals|quarter[- ]final|quarterfinal/', $fase)) {
         return 'Quarterfinals';
     }
 
-    if (strpos($fase, 'semifinal') !== false || strpos($fase, 'semi-final') !== false || strpos($fase, 'semi-finals') !== false) {
+    if (preg_match('/semifinal|semi[- ]final|semi[- ]finals|semifinals/', $fase)) {
         return 'Semifinals';
     }
 
-    if (strpos($fase, 'final') !== false) {
+    if (preg_match('/third[-_ ]?place|thirdplace|third\s+place/', $fase)) {
+        return 'Third-Place';
+    }
+
+    if (preg_match('/final|finals/', $fase)) {
         return 'Final';
     }
 
-    // Fallback por número de partido
     // if ($partido <= 48) {
     //     return 'Group';
     // }
@@ -80,7 +83,7 @@ function normalizarFase($fase, $partido)
     //     return 'Semifinals';
     // }
 
-    // return 'Final';
+    return 'Final';
 }
 
 $partidosPorFase = [];
@@ -369,8 +372,8 @@ $gruposFase = array_values($partidosPorFase);
                                                                             }
                                                                         } elseif (
                                                                             strpos($faseGrupo['nombre'], 'Semifinals') !== false
-                                                                            || strpos($faseGrupo['nombre'], 'semifinals') !== false
-                                                                            || strpos($faseGrupo['nombre'], 'semi-finals') !== false
+                                                                            // || strpos($faseGrupo['nombre'], 'semifinals') !== false
+                                                                            // || strpos($faseGrupo['nombre'], 'semi-finals') !== false
                                                                         ) {
                                                                             if ($pron['puntos'] === 10) {
                                                                                 $icono = '🎯';
@@ -379,7 +382,15 @@ $gruposFase = array_values($partidosPorFase);
                                                                             } else {
                                                                                 $icono = '❌';
                                                                             }
-                                                                        } elseif (strpos($faseGrupo['nombre'], 'final') !== false) {
+                                                                        } elseif (strpos($faseGrupo['nombre'], 'Third-Place') !== false) {
+                                                                            if ($pron['puntos'] === 12) {
+                                                                                $icono = '🎯';
+                                                                            } elseif ($pron['puntos'] === 7) {
+                                                                                $icono = '✅';
+                                                                            } else {
+                                                                                $icono = '❌';
+                                                                            }
+                                                                        }elseif (strpos($faseGrupo['nombre'], 'Final') !== false) {
                                                                             if ($pron['puntos'] === 15) {
                                                                                 $icono = '🎯';
                                                                             } elseif ($pron['puntos'] === 8) {

@@ -161,6 +161,13 @@ if (!function_exists('puntosPorFase')) {
             ];
         }
 
+        if(strpos($fase, 'third-place') !== false)
+        {
+            return [
+                'exacto' => 12,
+                'ganador' => 7
+            ];
+        }
         if(strpos($fase, 'final') !== false)
         {
             return [
